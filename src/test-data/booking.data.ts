@@ -11,6 +11,9 @@ export type Booking = {
   additionalneeds?: string;
 };
 
+// Deliberately loose shape for negative tests that send broken payloads
+export type InvalidBookingPayload = Record<string, unknown>;
+
 export const createBookingData = (
   firstname = 'John',
   lastname = 'Smith'
@@ -27,4 +30,14 @@ export const createBookingData = (
     },
     additionalneeds: 'Breakfast',
   };
+};
+
+export const bookingWith = (
+  overrides: InvalidBookingPayload
+): InvalidBookingPayload => ({ ...createBookingData(), ...overrides });
+
+export const bookingWithout = (field: keyof Booking): InvalidBookingPayload => {
+  const data: InvalidBookingPayload = { ...createBookingData() };
+  delete data[field];
+  return data;
 };

@@ -8,6 +8,8 @@
   "test:auth": "playwright test tests/auth.spec.ts",
   "test:health": "playwright test tests/health.spec.ts",
   "test:booking": "playwright test tests/booking-crud.spec.ts",
+  "test:validation": "playwright test tests/booking-validation.spec.ts",
+  "test:authorization": "playwright test tests/booking-authorization.spec.ts",
   "report": "playwright show-report reports/html",
   "typecheck": "tsc --noEmit"
 },
