@@ -108,7 +108,7 @@ test.describe('Booking CRUD API Tests', () => {
 
     const deleteResponse = await bookingClient.deleteBooking(bookingid, authToken);
 
-    // API returns 201 Created on delete rather than 200/204
+    // API returns 201 Created on delete rather than 200/204 (BUG-009)
     expect(deleteResponse.status()).toBe(201);
 
     const getResponse = await bookingClient.getBooking(bookingid);
