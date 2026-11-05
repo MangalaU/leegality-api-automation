@@ -7,6 +7,7 @@
   "test": "playwright test",
   "test:auth": "playwright test tests/auth.spec.ts",
   "test:health": "playwright test tests/health.spec.ts",
+  "test:booking": "playwright test tests/booking-crud.spec.ts",
   "report": "playwright show-report reports/html",
   "typecheck": "tsc --noEmit"
 },

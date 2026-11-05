@@ -1,16 +1,10 @@
-import {test , expect} from '@playwright/test'
+import { test, expect } from '../src/fixtures/api.fixture';
 
 test.describe('Health Check API', () => {
-    test('GET /ping should return successful response', async ({ request }) =>{
+  test('GET /ping should confirm the API is up', async ({ bookingClient }) => {
+    const response = await bookingClient.getHealth();
 
-        const response = await request.get('/ping');
-
-        // Validate HTTP status
-        expect(response.status()).toBe(201);
-
-        //Validate successful HTTP response
-        expect(response.ok()).toBeTruthy();
-
-    });
-
+    // restful-booker returns 201 Created for a health check
+    expect(response.status()).toBe(201);
+  });
 });

@@ -1,70 +1,73 @@
-
-import {test as base, expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 
 import { BookingClient } from '../clients/booking.client';
 import { AuthClient } from '../clients/auth.client';
+import { Booking, createBookingData } from '../test-data/booking.data';
 
+type CreatedBooking = {
+  id: number;
+  data: Booking;
+};
 
 type ApiFixtures = {
-    bookingClient: BookingClient ;
-    authClient: AuthClient ;
-    authToken: string;
-    
+  bookingClient: BookingClient;
+  authClient: AuthClient;
+  authToken: string;
+  createdBooking: CreatedBooking;
 };
 
 export const test = base.extend<ApiFixtures>({
+  bookingClient: async ({ request }, use) => {
+    await use(new BookingClient(request));
+  },
 
-    //Reusable booking API client
-    bookingClient: async ({request }, use) =>{
-        const client = new BookingClient(request);
+  authClient: async ({ request }, use) => {
+    await use(new AuthClient(request));
+  },
 
-        await use(client);
-    },
+  authToken: async ({ authClient }, use) => {
+    const username = process.env.API_USERNAME;
+    const password = process.env.API_PASSWORD;
 
-    // Reusable authentication API client
-    authClient: async ({request} ,use)=>{
-        const client = new AuthClient(request);
+    if (!username || !password) {
+      throw new Error(
+        'API_USERNAME or API_PASSWORD is missing from environment variables'
+      );
+    }
 
-        await use(client);
-    },
+    const response = await authClient.createToken({ username, password });
 
-    //Generate authentication token when  required 
-    authToken: async ({ authClient }, use) => {
+    if (!response.ok()) {
+      throw new Error(`Authentication failed with status: ${response.status()}`);
+    }
 
-        const username = process.env.API_USERNAME;
-        const password = process.env.API_PASSWORD;
-  
-        if(!username || !password){
-            throw new Error(
-                'API_USERNAME or API_PASSWORD is missing from environment variables'
-            );
+    const responseBody = await response.json();
 
-        } 
+    if (typeof responseBody.token !== 'string' || responseBody.token.length === 0) {
+      throw new Error(
+        `Authentication token missing: ${JSON.stringify(responseBody)}`
+      );
+    }
 
-        const response = await authClient.createToken({
-            username,
-            password,
-        });
+    await use(responseBody.token);
+  },
 
-        if(!response.ok()){
-            throw new Error(
-                `Authetication failed with status: ${response.status()}`
-            );
-        }
+  // Fresh booking per test, deleted afterwards so tests never share data
+  createdBooking: async ({ bookingClient, authToken }, use) => {
+    const data = createBookingData();
+    const response = await bookingClient.createBooking(data);
 
-        const responseBody  = await response.json();
+    expect(response.status(), 'booking setup failed').toBe(200);
 
-        if(
-            typeof responseBody.token !== 'string' ||
-            responseBody.token.length ===0
-        ) {
-            throw  new Error(
-                `Authenticaton token missing: ${JSON.stringify(responseBody)}`
-            );
-            
-        }
+    const responseBody = await response.json();
+    const id = responseBody.bookingid;
 
-        await use(responseBody.token);
-    },
+    expect(typeof id, 'bookingid should be a number').toBe('number');
+
+    await use({ id, data });
+
+    await bookingClient.deleteBooking(id, authToken);
+  },
 });
- export { expect };
+
+export { expect };
